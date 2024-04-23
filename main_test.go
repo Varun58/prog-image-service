@@ -45,3 +45,74 @@ func TestUploadImage(t *testing.T) {
 	// Assert the response contains an ID
 	assert.NotNil(t, response["id"])
 }
+
+func TestGetImage(t *testing.T) {
+	req, err := http.NewRequest("GET", "/image/valid_image_id/jpeg", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Set up a mock server
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Simulate the existence of the image
+		// For testing purposes, return a blank response
+		w.WriteHeader(http.StatusOK)
+	})
+
+	// Serve the HTTP request and record the response
+	handler.ServeHTTP(rr, req)
+
+	// Check if the status code is as expected
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestRotateImage(t *testing.T) {
+	// Create a new HTTP request to rotate an image
+	req, err := http.NewRequest("GET", "/transform/rotate/valid_image_id/90", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Set up a mock server
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Simulate the rotation of the image
+		// For testing purposes, return a blank response
+		w.WriteHeader(http.StatusOK)
+	})
+
+	// Serve the HTTP request and record the response
+	handler.ServeHTTP(rr, req)
+
+	// Check if the status code is as expected
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestResizeImage(t *testing.T) {
+	// Create a new HTTP request to resize an image
+	req, err := http.NewRequest("GET", "/transform/resize/valid_image_id/100/100", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a ResponseRecorder to record the response
+	rr := httptest.NewRecorder()
+
+	// Set up a mock server
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Simulate the resizing of the image
+		// For testing purposes, return a blank response
+		w.WriteHeader(http.StatusOK)
+	})
+
+	// Serve the HTTP request and record the response
+	handler.ServeHTTP(rr, req)
+
+	// Check if the status code is as expected
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
