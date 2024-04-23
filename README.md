@@ -22,26 +22,26 @@ This is a simple Go web service for uploading, transforming, and retrieving imag
 
 To upload an image, send a POST request to `/upload` endpoint with the image file in the form data:
 
-curl -X POST -F "file=@/path/to/image.jpg" http://localhost:8080/upload
+```curl -X POST -F "file=@/path/to/image.jpg" http://localhost:8080/upload```
 
 ### Retrieving Images
 
 To retrieve an uploaded image, send a GET request to the `/image/:imageID/:filetype` endpoint, where `:imageID` is the ID of the uploaded image and `:filetype` is the desired file type (jpeg, png, gif):
 
-curl http://localhost:8080/image/your_image_id/jpeg
+```curl http://localhost:8080/image/your_image_id/jpeg```
 
 
 ### Rotating Images
 
 To rotate an uploaded image, send a GET request to `/transform/rotate/:imageID/:angle` endpoint, where `:imageID` is the ID of the uploaded image and `:angle` is the rotation angle in degrees:
-curl http://localhost:8080/transform/rotate/your_image_id/90
+```curl http://localhost:8080/transform/rotate/your_image_id/90```
 
 
 ### Resizing Images
 
 To resize an uploaded image, send a GET request to `/transform/resize/:imageID/:width/:height` endpoint, where `:imageID` is the ID of the uploaded image, `:width` is the desired width, and `:height` is the desired height:
 
-curl http://localhost:8080/transform/resize/your_image_id/100/100
+```curl http://localhost:8080/transform/resize/your_image_id/100/100```
 
 
 ## Commands
