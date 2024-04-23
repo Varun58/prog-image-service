@@ -21,17 +21,22 @@ import (
 )
 
 func main() {
-	router := gin.Default()
-
-	router.POST("/upload", uploadImage)
-	router.GET("/image/:imageID/:filetype", getImage)
-	router.GET("/transform/rotate/:imageID/:angle", rotateImage)
-	router.GET("/transform/resize/:imageID/:width/:height", resizeImage)
-
-	router.Run(":8080")
+    router := SetupRouter()
+    router.Run(":8080")
 }
 
-func uploadImage(c *gin.Context) {
+func SetupRouter() *gin.Engine {
+    router := gin.Default()
+
+    router.POST("/upload", UploadImage)
+    router.GET("/image/:imageID/:filetype", GetImage)
+    router.GET("/transform/rotate/:imageID/:angle", RotateImage)
+    router.GET("/transform/resize/:imageID/:width/:height", ResizeImage)
+
+    return router
+}
+
+func UploadImage(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -69,7 +74,7 @@ var encoders = map[string]func(io.Writer, image.Image) error{
 	"png":  encodePNG,
 }
 
-func getImage(c *gin.Context) {
+func GetImage(c *gin.Context) {
 	imageID := c.Param("imageID")
 	imageType := c.Param("filetype") // File type provided as parameter
 
@@ -117,7 +122,7 @@ func getImage(c *gin.Context) {
 	c.Data(http.StatusOK, contentType, imageBuffer.Bytes())
 }
 
-func rotateImage(c *gin.Context) {
+func RotateImage(c *gin.Context) {
 	imageID := c.Param("imageID")
 	angleStr := c.Param("angle")
 
@@ -213,10 +218,7 @@ func rotate(img image.Image, angle float64) image.Image {
     return rotated
 }
 
-
-
-
-func resizeImage(c *gin.Context) {
+func ResizeImage(c *gin.Context) {
 	imageID := c.Param("imageID")
 	widthStr := c.Param("width")
 	heightStr := c.Param("height")

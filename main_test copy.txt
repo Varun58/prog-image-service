@@ -1,0 +1,210 @@
+package main
+
+import (
+	"fmt"
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"os"
+	"io"
+	"mime/multipart"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestUploadImage(t *testing.T) {
+	// Open the test image file
+	file, err := os.Open("testdata/test.jpeg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	// Create a new multipart writer
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Create a form file field with the test image
+	part, err := writer.CreateFormFile("file", "testdata/test.jpeg")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Copy the test image file to the form file field
+	if _, err := io.Copy(part, file); err != nil {
+		t.Fatal(err)
+	}
+
+	// Close the multipart writer to finalize the request body
+	writer.Close()
+
+	// Create a new HTTP request with the multipart form data
+	req := httptest.NewRequest("POST", "/upload", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	// Create a response recorder to record the response
+	rec := httptest.NewRecorder()
+
+	// Call the handler function
+	// Create a fake gin.Context
+	context, _ := gin.CreateTestContext(httptest.NewRecorder())
+	context.Request = req
+
+	// Call the handler function with the fake context
+	UploadImage(context)
+
+	// Check the status code
+	if rec.Code != http.StatusOK {
+		t.Errorf("Expected status code %d but got %d", http.StatusOK, rec.Code)
+	}
+
+	// Parse the response body
+	var responseBody map[string]interface{}
+	if err := json.Unmarshal(rec.Body.Bytes(), &responseBody); err != nil {
+		t.Fatal(err)
+	}
+
+	// Check if the "id" field exists in the response
+	id, ok := responseBody["id"].(string)
+	if !ok {
+		t.Error("Response does not contain the 'id' field")
+	}
+
+	// Optionally, you can also check the value of the "id" field
+	fmt.Println("Uploaded image ID:", id)
+}
+
+
+func TestGetImage(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.GET("/image/:imageID/:filetype", GetImage)
+
+	// Set up test parameters
+	imageID := "test-image-id"
+	filetype := "jpg"
+
+	// Construct the request URL with parameters
+	reqURL := fmt.Sprintf("/image/%s/%s", imageID, filetype)
+	req := httptest.NewRequest("GET", reqURL, nil)
+
+	// Create a response recorder to record the response
+	rec := httptest.NewRecorder()
+
+	// Call the handler function
+	router.ServeHTTP(rec, req)
+
+	// Check the status code
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestRotateImage(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.GET("/transform/rotate/:imageID/:angle", RotateImage)
+
+	req := httptest.NewRequest("GET", "/transform/rotate/test-image-id/90", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestResizeImage(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.GET("/transform/resize/:imageID/:width/:height", ResizeImage)
+
+	req := httptest.NewRequest("GET", "/transform/resize/test-image-id/100/100", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestRotateImageInvalidAngle(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.GET("/transform/rotate/:imageID/:angle", RotateImage)
+
+	req := httptest.NewRequest("GET", "/transform/rotate/test-image-id/invalid", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestResizeImageInvalidWidth(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.GET("/transform/resize/:imageID/:width/:height", ResizeImage)
+
+	req := httptest.NewRequest("GET", "/transform/resize/test-image-id/invalid/100", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestResizeImageInvalidHeight(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.GET("/transform/resize/:imageID/:width/:height", ResizeImage)
+
+	req := httptest.NewRequest("GET", "/transform/resize/test-image-id/100/invalid", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestResizeImageNegativeWidth(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.GET("/transform/resize/:imageID/:width/:height", ResizeImage)
+
+	req := httptest.NewRequest("GET", "/transform/resize/test-image-id/-100/100", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestResizeImageNegativeHeight(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.GET("/transform/resize/:imageID/:width/:height", ResizeImage)
+
+	req := httptest.NewRequest("GET", "/transform/resize/test-image-id/100/-100", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestResizeImageZeroWidth(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.GET("/transform/resize/:imageID/:width/:height", ResizeImage)
+
+	req := httptest.NewRequest("GET", "/transform/resize/test-image-id/0/100", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestResizeImageZeroHeight(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.GET("/transform/resize/:imageID/:width/:height", ResizeImage)
+
+	req := httptest.NewRequest("GET", "/transform/resize/test-image-id/100/0", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
