@@ -37,6 +37,19 @@ To rotate an uploaded image, send a GET request to `/transform/rotate/:imageID/:
 
 To resize an uploaded image, send a GET request to `/transform/resize/:imageID/:width/:height` endpoint, where `:imageID` is the ID of the uploaded image, `:width` is the desired width, and `:height` is the desired height:
 
+## Commands
+
+1. Clone
+```git clone https://github.com/Varun58/prog-image-service.git ```
+
+2. Build Application
+```go build prog-image-service```
+
+4. Run Test Cases
+```go test -v```
+
+5. Run Application
+```go run main.go```
 
 ## Dependencies
 
