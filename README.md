@@ -1,4 +1,4 @@
-# Image Transformation Service
+# Go Image Upload/Download REST API 
 
 This is a simple Go web service for uploading, transforming, and retrieving images.
 
