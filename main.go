@@ -55,7 +55,11 @@ func UploadImage(c *gin.Context) {
 
 // Define wrapper functions for encoders
 func encodeJPEG(w io.Writer, m image.Image) error {
-	return jpeg.Encode(w, m, nil)
+    // Create a new JPEG image with default options
+    jpegImage := &jpeg.Options{Quality: 100}
+
+    // Encode the image as JPEG with the specified quality
+    return jpeg.Encode(w, m, jpegImage)
 }
 
 func encodeGIF(w io.Writer, m image.Image) error {
@@ -95,10 +99,6 @@ func GetImage(c *gin.Context) {
 		return
 	}
 
-	// Create a buffer to write the image
-	var imageBuffer bytes.Buffer
-
-
 	// Check if the encoding function exists for the requested image type
 	encodeFunc, ok := encoders[imageType]
 	if !ok {
@@ -106,8 +106,11 @@ func GetImage(c *gin.Context) {
 		return
 	}
 
+	// Create a buffer to write the encoded image
+	var encodedImage bytes.Buffer
+
 	// Encode the image to the desired format
-	if err := encodeFunc(&imageBuffer, img); err != nil {
+	if err := encodeFunc(&encodedImage, img); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encode image"})
 		return
 	}
@@ -118,9 +121,10 @@ func GetImage(c *gin.Context) {
 	// Set the Content-Type header in the response
 	c.Header("Content-Type", contentType)
 
-	// Write the image buffer to the response
-	c.Data(http.StatusOK, contentType, imageBuffer.Bytes())
+	// Write the encoded image to the response
+	c.Data(http.StatusOK, contentType, encodedImage.Bytes())
 }
+
 
 func RotateImage(c *gin.Context) {
 	imageID := c.Param("imageID")
